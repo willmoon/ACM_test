@@ -1,73 +1,61 @@
 /*
 *给出一定数目动物的size和point，在一定的size下，求最大point。
+*****0-1背包问题******
+思路：对于Value[i_specices][i_size]而言，其代表i_specices 个物体 放到i_size 大小的背包中。
+Value[i_specices][i_size]取最大值时，可分为两种情况：
+第一种是i_size无法被完全填满，最大值对应于Value[i_specices-1][i_size]。
+第二种是刚好填满，这对应于一个包含一系列刚好填满的可能性的集合，
+其中的可能性是指当最后放进包中的物品恰好是size为wj的物品时背包填满并达到最高价值。
+而这时的背包价值等于size为wj物品的价值pj和当没有放入该物品时背包的最高价值之和。
+对应于Value[i_specices-1][i_size]+pj。
+
+最后应该取两者之间最大值。
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 
+#define MAX_SPECICES 100
+#define MAX_AREA 100000
+
+int Value[MAX_SPECICES][MAX_AREA];
+
 int i_species; //动物数目
 
 int i_area;	//方舟面积
+
 
 typedef struct
 {
 	int i_size;
 	int i_point;
 
-	float f_pps;
 }ANIMAL;
 
-ANIMAL animals[100];
-
-
-//把动物按pps（point per size）从小到大排序
-void sort(ANIMAL animals[],int i_species)
-{
-	int m,n;
-	ANIMAL tem;
-	for(n=i_species-1;n>0;n--)
-	{
-		for(m=0;m<n;m++)
-		{
-			if (animals[m].f_pps >animals[m+1].f_pps )
-			{
-				tem=animals[m+1];
-				animals[m+1]=animals[m];
-				animals[m]=tem;
-			}
-		}
-	}
-}
+ANIMAL animals[MAX_SPECICES];
 
 
 
 int getResult(ANIMAL animals[],int i_species,int i_area)
 {
-	int i;
+	int i,j;
 
-	int total_area =0;
-	int total_point =0;
-
-	for(i=i_species-1;i>=0;i--)
+	for(i=0; i<=i_species ;++i)
 	{
-		if((total_area +=animals [i].i_size )<=i_area )
+		for(j=0; j<=i_area ;++j)
 		{
-			total_point +=animals [i].i_point ;
-		}
-		else
-		{
-			total_area -=animals [i].i_size ;
+			Value [i][j] = (i==0 ? 0 :Value [i-1][j]);
+
+			if(i>0 && j>=animals [i-1].i_size )
+			{
+				if(Value[i][j] < Value [i-1][j-animals [i-1].i_size] +animals [i-1].i_point)
+					Value [i][j]=Value [i-1][j-animals [i-1].i_size ] +animals [i-1].i_point;
+			}
 		}
 	}
 
-	if(i_area >total_area)
-	{
-		
-	}
-	else
-	{
-		return total_point ;
-	}
+	return Value [i_species][i_area];
+ 
 }
 
 int main()
@@ -77,21 +65,18 @@ int main()
 	{
 		for(i=0;i<i_species ;i++)
 		{
-			scanf ("%d%d",&animals [i].i_size ,&animals [i].i_point );
-			animals [i].f_pps =(animals [i].i_point +0.0)/animals [i].i_size ;
+			scanf ("%d %d",&animals [i].i_size ,&animals [i].i_point );
 
 		}
 
 		scanf ("%d",&i_area);
 
-		if(i_area >100000)
+		if(i_area >MAX_AREA)
 		{
 			break;
 		}
 
-		sort (animals ,i_species);
-
-		printf ("%d",getResult (animals ,i_species ,i_area ));
+		printf ("%d\n",getResult (animals ,i_species ,i_area ));
 	}
 	return 0;
 }
